@@ -295,6 +295,16 @@ static void sighandler(int signum) {
 	signal(signum, SIG_DFL);
 }
 
+static bool is_mac_nz(u8_t* mac) {
+	int ix;
+	for(ix=0; ix<6; ++ix) {
+		if (mac[ix]) {
+			return true;
+		}
+	}
+	return false;
+}
+
 int main(int argc, char **argv) {
 	char *server = NULL;
 	char *output_device = "default";
@@ -306,7 +316,7 @@ int main(int argc, char **argv) {
 	extern bool pcm_check_header;
 	extern bool user_rates;
 	char *logfile = NULL;
-	u8_t mac[6];
+	u8_t mac[6]={0,0,0,0,0,0};
 	unsigned stream_buf_size = STREAMBUF_SIZE;
 	unsigned output_buf_size = 0; // set later
 	unsigned rates[MAX_SUPPORTED_SAMPLERATES] = { 0 };
@@ -354,7 +364,7 @@ int main(int argc, char **argv) {
 #define MAXCMDLINE 512
 	char cmdline[MAXCMDLINE] = "";
 
-	get_mac(mac);
+//	get_mac(mac);
 
 	for (i = 0; i < argc && (strlen(argv[i]) + strlen(cmdline) + 2 < MAXCMDLINE); i++) {
 		strcat(cmdline, argv[i]);
@@ -794,7 +804,27 @@ int main(int argc, char **argv) {
 #if DSD
 	dsd_init(dsd_outfmt, dsd_delay);
 #endif
-
+	{
+		if(!is_mac_nz(mac)) {
+			/*
+			 * - a MAC address was not specified on command line or environment variable,
+			 * - or the MAC address bytes specified were all 0s (invalid).
+			 * Retrieve and use the MAC address from a network interface,
+			 */
+			get_mac(mac);
+		}
+		while(!is_mac_nz(mac)) {
+			/*
+			 * if all MAC address byte values are 0 then 
+			 *  - a MAC address was not specified on the command line or environment variable
+			 *  - and no network interface is up - yet
+			 * sleep 5 seconds and try retrieving MAC address from a network interface, ad inifinitum.
+			 */
+			fprintf(stderr, "Got all zeros for mac address: retrying in 5 seconds\n");
+			sleep(5);
+			get_mac(mac);
+		}
+	}
 #if VISEXPORT
 	if (visexport) {
 		output_vis_init(log_output, mac);
