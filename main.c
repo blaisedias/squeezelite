@@ -145,6 +145,8 @@ static void usage(const char *argv0) {
 #if LINUX || FREEBSD || SUN
 		   "  -z \t\t\tDaemonize\n"
 #endif
+		   "  -k \t\t\tterminate if MAC address bytes are all 0s\n"
+		   "  -K \t\t\twait until MAC address bytes are not all 0s\n"
 		   "  -Z <rate>\t\tReport rate to server in helo as the maximum sample rate we can support\n"
 		   "  -t \t\t\tLicense terms\n"
 		   "  -? \t\t\tDisplay this help text\n"
@@ -295,16 +297,6 @@ static void sighandler(int signum) {
 	signal(signum, SIG_DFL);
 }
 
-static bool is_mac_nz(u8_t* mac) {
-	int ix;
-	for(ix=0; ix<6; ++ix) {
-		if (mac[ix]) {
-			return true;
-		}
-	}
-	return false;
-}
-
 int main(int argc, char **argv) {
 	char *server = NULL;
 	char *output_device = "default";
@@ -346,6 +338,9 @@ int main(int argc, char **argv) {
 #if IR
 	char *lircrc = NULL;
 #endif
+	bool mac_set_on_cmdline = false;
+	bool wait_nz_mac = false;
+	bool exit_on_zero_mac = false;
 
 	log_level log_output = lWARN;
 	log_level log_stream = lWARN;
@@ -380,7 +375,7 @@ int main(int argc, char **argv) {
 				   , opt) && optind < argc - 1) {
 			optarg = argv[optind + 1];
 			optind += 2;
-		} else if (strstr("ltz?W"
+		} else if (strstr("kKltz?W"
 #if ALSA
 						  "LX"
 #endif
@@ -476,6 +471,7 @@ int main(int argc, char **argv) {
 					mac[byte++] = (u8_t)strtoul(t, &tmp, 16);
 					t = strtok(NULL, ":");
 				}
+				mac_set_on_cmdline = true;
 			}
 			break;
 		case 'M':
@@ -703,6 +699,13 @@ int main(int argc, char **argv) {
 #endif /* SUN */
 			break;
 #endif
+		case 'k':
+			exit_on_zero_mac = true;
+			break;
+		case 'K':
+			wait_nz_mac = true;
+			exit_on_zero_mac = true;
+			break;
 		case 't':
 			license();
 			exit(0);
@@ -804,25 +807,29 @@ int main(int argc, char **argv) {
 #if DSD
 	dsd_init(dsd_outfmt, dsd_delay);
 #endif
-	{
-		if(!is_mac_nz(mac)) {
-			/*
-			 * - a MAC address was not specified on command line or environment variable,
-			 * - or the MAC address bytes specified were all 0s (invalid).
-			 * Retrieve and use the MAC address from a network interface,
-			 */
-			get_mac(mac);
+	if (!mac_set_on_cmdline) {
+		/*
+		 * - a MAC address was not specified on command line,
+		 * Retrieve and use the MAC address from a network interface or environment variable,
+		 */
+		get_mac(mac);
+		if(!is_mac_nz(mac) && wait_nz_mac) {
+			LOG_ERROR("Got all zeros for mac address: retrying every second");
+			while(!is_mac_nz(mac)) {
+				/*
+				 * if all MAC address byte values are 0 then 
+				 *  - a MAC address was not specified in environment variable
+				 *  - and no network interface is up - yet
+				 * sleep for a second and try retrieving MAC address from a network interface, ad inifinitum.
+				 */
+				sleep(1);
+				get_mac(mac);
+			}
 		}
-		while(!is_mac_nz(mac)) {
-			/*
-			 * if all MAC address byte values are 0 then 
-			 *  - a MAC address was not specified on the command line or environment variable
-			 *  - and no network interface is up - yet
-			 * sleep 5 seconds and try retrieving MAC address from a network interface, ad inifinitum.
-			 */
-			fprintf(stderr, "Got all zeros for mac address: retrying in 5 seconds\n");
-			sleep(5);
-			get_mac(mac);
+		if(!is_mac_nz(mac) && exit_on_zero_mac) {
+			/* exit if all MAC address byte values are 0 */
+			fprintf(stderr, "Got all zeros for mac address.\n");
+			exit(1);
 		}
 	}
 #if VISEXPORT
@@ -830,7 +837,6 @@ int main(int argc, char **argv) {
 		output_vis_init(log_output, mac);
 	}
 #endif
-
 	decode_init(log_decode, include_codecs, exclude_codecs);
 
 #if RESAMPLE
