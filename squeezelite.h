@@ -147,6 +147,14 @@
 #define VISEXPORT 0
 #endif
 
+#if (LINUX || OSX) && defined(VISEXPORT_2)
+#undef VISEXPORT_2
+#define VISEXPORT_2 1 // alternative visualizer export support uses linux shared memory
+#else
+#define VISEXPORT_2 0
+#endif
+
+
 #if LINUX && defined(IR)
 #undef IR
 #define IR 1
@@ -750,14 +758,29 @@ void _apply_gain(struct buffer *outputbuf, frames_t count, s32_t gainL, s32_t ga
 s32_t gain(s32_t gain, s32_t sample);
 s32_t to_gain(float f);
 
+#if VISEXPORT || VISEXPORT_2
+typedef void (*vis_export_t) (struct buffer *outputbuf, struct outputstate *output, frames_t out_frames, bool silence);
+typedef void (*vis_stop_t) (void);
+extern vis_export_t vis_export;
+extern vis_stop_t vis_stop;
+#else
+#define vis_export(...)
+#define vis_stop()
+#endif
+
 // output_vis.c
 #if VISEXPORT
 void _vis_export(struct buffer *outputbuf, struct outputstate *output, frames_t out_frames, bool silence);
 void output_vis_init(log_level level, u8_t *mac);
-void vis_stop(void);
-#else
-#define _vis_export(...)
-#define vis_stop()
+void _vis_stop(void);
+#endif
+
+// output_vis_2.c
+#if VISEXPORT_2
+void _vis_2_export(struct buffer *outputbuf, struct outputstate *output, frames_t out_frames, bool silence);
+void output_vis_2_init(log_level level, u8_t *mac);
+void _vis_2_stop(void);
+void _vis_2_set_buf_size(unsigned size);
 #endif
 
 // dop.c
