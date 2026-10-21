@@ -17,7 +17,7 @@ builddir="$srcdir/$pkgname-master"
 
 build() {
     cd "$builddir"
-    make OPTS="-DRESAMPLE -DDSD -DGPIO -DVISEXPORT -DUSE_SSL -DOPUS -DALAC -DIR -I/usr/include/opus -I/usr/include/alac"
+    make OPTS="-DRESAMPLE -DDSD -DGPIO -DVISEXPORT -DVISEXPORT_2 -DUSE_SSL -DOPUS -DALAC -DIR -I/usr/include/opus -I/usr/include/alac"
     gcc -Os -fomit-frame-pointer -fcommon -s -o find_servers tools/find_servers.c
     gcc -Os -fomit-frame-pointer -fcommon -s -o alsacap tools/alsacap.c -lasound
 }

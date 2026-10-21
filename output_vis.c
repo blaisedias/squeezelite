@@ -124,7 +124,7 @@ void _vis_export(struct buffer *outputbuf, struct outputstate *output, frames_t 
 	}
 }
 
-void vis_stop(void) {
+void _vis_stop(void) {
 	if (vis_mmap) {
 		pthread_rwlock_wrlock(&vis_mmap->rwlock);
 		vis_mmap->running = false;
