@@ -290,6 +290,24 @@ static void license(void) {
 		   );
 }
 
+// globals
+// 
+// gpio.c
+#if GPIO
+bool gpio_active;
+char *power_script;
+
+#if RPI
+int gpio_chip;
+int gpio_pin;
+bool gpio_active_low;
+#endif // RPI
+#endif //GPIO
+
+#if USE_SSL && !LINKALL && !NO_SSLSYM
+bool ssl_loaded;
+#endif
+
 static void sighandler(int signum) {
 	slimproto_stop();
 
