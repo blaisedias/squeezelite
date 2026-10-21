@@ -791,13 +791,13 @@ struct codec *register_opus(void);
 #if GPIO
 void relay(int state);
 void relay_script(int state);
-bool gpio_active;
-char *power_script;
+extern bool gpio_active;
+extern char *power_script;
 
 #if RPI
-int gpio_chip;
-int gpio_pin;
-bool gpio_active_low;
+extern int gpio_chip;
+extern int gpio_pin;
+extern bool gpio_active_low;
 bool gpio_init();
 void gpio_close();
 #endif // RPI
@@ -819,6 +819,6 @@ void ir_close(void);
 #if USE_SSL && !LINKALL && !NO_SSLSYM
 bool load_ssl_symbols(void);
 void free_ssl_symbols(void);
-bool ssl_loaded;
+extern bool ssl_loaded;
 #endif
 
