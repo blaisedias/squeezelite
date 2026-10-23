@@ -59,24 +59,6 @@ static int vis_fd = -1;
 
 static log_level loglevel;
 
-int64_t get_micro_seconds() {
-	int64_t micros;
-	struct timespec  ts;
-	if (clock_gettime(CLOCK_MONOTONIC, &ts) == -1) {
-		perror("clock_gettime");
-		exit(EXIT_FAILURE);
-	}
-	micros = (ts.tv_sec*1000000);
-	micros += (ts.tv_nsec/1000);
-	return micros;
-}
-
-int64_t get_milli_seconds() {
-	return get_micro_seconds()/1000;
-}
-
-static int64_t prevt = 0;
-
 // attempt to write audio to vis_mmap but do not wait more than VIS_LOCK_NS to get wrlock
 // this can result in missing audio export to the mmap region, but this is preferable dropping audio
 void _vis_export(struct buffer *outputbuf, struct outputstate *output, frames_t out_frames, bool silence) {
@@ -113,10 +95,6 @@ void _vis_export(struct buffer *outputbuf, struct outputstate *output, frames_t 
 			if (silence) {
 				vis_mmap->running = false;
 			} else {
-int64_t t = get_milli_seconds();
-logprint("(f:%u t:%ld)", (unsigned)out_frames, t - prevt);
-prevt = t;
-
 				frames_t vis_cnt = out_frames;
 				s32_t *ptr = (s32_t *) outputbuf->readp;
 				unsigned i = vis_mmap->buf_index;
@@ -146,7 +124,7 @@ prevt = t;
 	}
 }
 
-void vis_stop(void) {
+void _vis_stop(void) {
 	if (vis_mmap) {
 		pthread_rwlock_wrlock(&vis_mmap->rwlock);
 		vis_mmap->running = false;

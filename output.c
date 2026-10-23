@@ -275,7 +275,7 @@ frames_t _output_frames(frames_t avail) {
 
 		size -= out_frames;
 
-		_vis_export(outputbuf, &output, out_frames, silence);
+		vis_export(outputbuf, &output, out_frames, silence);
 
 		if (!silence) {
 			_buf_inc_readp(outputbuf, out_frames * BYTES_PER_FRAME);

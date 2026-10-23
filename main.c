@@ -135,6 +135,9 @@ static void usage(const char *argv0) {
 #if VISEXPORT
 		   "  -v \t\t\tVisualizer support\n"
 #endif
+#if VISEXPORT_2
+		   "  -x \t\t\tVisualizer support v2\n"
+#endif
 # if ALSA
 		   "  -O <mixer device>\tSpecify mixer device, defaults to 'output device'\n"
 		   "  -L \t\t\tList volume controls for output device\n"
@@ -216,6 +219,9 @@ static void usage(const char *argv0) {
 #endif
 #if VISEXPORT
 		   " VISEXPORT"
+#endif
+#if VISEXPORT_2
+		   " VISEXPORT_2"
 #endif
 #if IR
 		   " IR"
@@ -308,6 +314,21 @@ bool gpio_active_low;
 bool ssl_loaded;
 #endif
 
+#if VISEXPORT || VISEXPORT_2
+static void stubbed_vis_export(struct buffer *outputbuf, struct outputstate *output, frames_t out_frames, bool silence) {
+	(void) outputbuf;
+	(void) output;
+	(void) out_frames;
+	(void) silence;
+}
+
+static void stubbed_vis_stop(void) {
+}
+
+vis_export_t vis_export = stubbed_vis_export;
+vis_stop_t vis_stop = stubbed_vis_stop;
+#endif
+
 static void sighandler(int signum) {
 	slimproto_stop();
 
@@ -352,6 +373,9 @@ int main(int argc, char **argv) {
 #endif
 #if VISEXPORT
 	bool visexport = false;
+#endif
+#if VISEXPORT_2
+	bool visexport_2 = false;
 #endif
 #if IR
 	char *lircrc = NULL;
@@ -403,6 +427,9 @@ int main(int argc, char **argv) {
 #endif
 #if VISEXPORT
 						  "v"
+#endif
+#if VISEXPORT_2
+						  "x"
 #endif
 #if IR
 						  "i"
@@ -608,6 +635,15 @@ int main(int argc, char **argv) {
 #if VISEXPORT
 		case 'v':
 			visexport = true;
+			vis_export = _vis_export;
+			vis_stop = _vis_stop;
+			break;
+#endif
+#if VISEXPORT_2
+		case 'x':
+			visexport_2 = true;
+			vis_export = _vis_2_export;
+			vis_stop = _vis_2_stop;
 			break;
 #endif
 #if ALSA
@@ -851,6 +887,11 @@ int main(int argc, char **argv) {
 #if VISEXPORT
 	if (visexport) {
 		output_vis_init(log_output, mac);
+	}
+#endif
+#if VISEXPORT_2
+	if (visexport_2) {
+		output_vis_2_init(log_output, mac);
 	}
 #endif
 

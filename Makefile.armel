@@ -1,5 +1,5 @@
 # Makefile armel
-OPTS = -DRESAMPLE -DFFMPEG -DVISEXPORT -DDSD -DIR -DGPIO -I/usr/local/include
+OPTS = -DRESAMPLE -DFFMPEG -DVISEXPORT -DVISEXPORT_2 -DDSD -DIR -DGPIO -I/usr/local/include
 CFLAGS  ?= -s -Wall -fPIC -O3 -march=armv5te $(OPTS)
 LDFLAGS ?= -s -lasound -lpthread -ldl -lrt -Wl,-rpath,/usr/local/lib
 EXECUTABLE ?= squeezelite
