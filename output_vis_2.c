@@ -112,7 +112,6 @@ static void *samples_thread_fn(void *arg) {
 				rd_sample_count = VIS_BUF_SIZE;
 				samples_rd_index = (samples_wr_index + 1) % VIS_BUF_SIZE;
 			}
-			assert(rd_sample_count < VIS_BUF_SIZE);
 			for(unsigned ix = 0; ix < rd_sample_count; ++ix) {
 				if (!current_replay_gain) {
 					vis_mmap->buffer[index] = samples_buf[samples_rd_index] >> 16;
