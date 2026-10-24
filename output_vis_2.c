@@ -106,6 +106,12 @@ static void *samples_thread_fn(void *arg) {
 			pthread_rwlock_wrlock(&vis_mmap->rwlock);
 			unsigned index = vis_mmap->buf_index;
 			unsigned rd_sample_count = __atomic_load_n(&samples_count, __ATOMIC_ACQUIRE);
+			if (rd_sample_count > VIS_BUF_SIZE) {
+				// sample buffer drain underflow, attempt to resync
+				fprintf(stderr," RD_XS: %u\n", rd_sample_count);
+				rd_sample_count = VIS_BUF_SIZE;
+				samples_rd_index = (samples_wr_index + 1) % VIS_BUF_SIZE;
+			}
 			assert(rd_sample_count < VIS_BUF_SIZE);
 			for(unsigned ix = 0; ix < rd_sample_count; ++ix) {
 				if (!current_replay_gain) {
@@ -146,14 +152,16 @@ void _vis_2_export(struct buffer *outputbuf, struct outputstate *output, frames_
 			}
 		} else {
 			unsigned sample_count = out_frames * 2;
-			// TODO: for now fail fast.
-			// future: attempt graceful recovery:
-            // set samples_rd_index to samples_wr_index
-            // and write out VIS_BUF_SIZE samples to
-            // shm.
-			assert(sample_count <= VIS_BUF_SIZE);
-			unsigned avail = VIS_BUF_SIZE - samples_wr_index;
 			uint8_t* readp = outputbuf->readp;
+			if (sample_count > VIS_BUF_SIZE) {
+				// sample buffer overflow
+				// the sample count is larger than the buffer, skip forward
+				// skip forward and only pass the newest samples
+				fprintf(stderr," WR_XS: %u\n", sample_count);
+				readp += sizeof(samples_buf[0]) * (sample_count - VIS_BUF_SIZE);
+				sample_count = VIS_BUF_SIZE;
+			}
+			unsigned avail = VIS_BUF_SIZE - samples_wr_index;
 #ifdef DEBUG_SAMPLING
 fprintf(stderr,"<%u ", sample_count);
 #endif
