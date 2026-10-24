@@ -125,13 +125,13 @@ static void *samples_thread_fn(void *arg) {
 //fprintf(stderr,"(%u,%u)", samples_wr_index, samples_rd_index);
 fprintf(stderr,"%u>\n", rd_sample_count); fflush(stdout);
 #endif
-			if(prev_rd_sample_count != rd_sample_count) {
-				fprintf(stderr, "rds: %5u indices:wr= %5u rd= %5u tot:wr= %llu rd= %llu\n",
-						rd_sample_count,
+			if(prev_rd_sample_count && rd_sample_count && prev_rd_sample_count < rd_sample_count) {
+				fprintf(stderr, "rds: %5u was %5u  indices:wr= %5u rd= %5u tot:wr= %llu rd= %llu\n",
+						rd_sample_count, prev_rd_sample_count,
 						samples_wr_index, samples_rd_index,
 						total_wr_samples, total_rd_samples);
-				prev_rd_sample_count = rd_sample_count;
 			}
+			prev_rd_sample_count = rd_sample_count;
 		}
 	}
 	return NULL;
