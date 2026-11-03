@@ -1,0 +1,6 @@
+# make file for generic linux
+OPTS = -DOPUS -DRESAMPLE -DFFMPEG -DVISEXPORT -DUSE_SSL -DNO_SSLSYM -DDSD -DIR -DCUSTOM_VERSION=vis-buffered
+CFLAGS = -I /usr/include -I /usr/include/opus  -Wall
+LDFLAGS = -s -L./lib -lssl -lcrypto -lz
+
+include Makefile
