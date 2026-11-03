@@ -1,0 +1,6 @@
+# DO NOT use this Makefile to build tczs
+OPTS = -DRESAMPLE -DFFMPEG -DOPUS -DVISEXPORT -DGPIO -DRPI -DIR -DUSE_SSL -DNO_SSLSYM -DCUSTOM_VERSION=-pCP-vis-buffered -DMODEL_NAME=SqueezeLite-pCP -DDSD
+CFLAGS = -I/usr/local/include -I/usr/local/include/opus -Wall
+LDFLAGS = -s -L./lib -lssl -lcrypto -lz
+
+include Makefile
