@@ -761,6 +761,7 @@ s32_t to_gain(float f);
 #if VISEXPORT || VISEXPORT_2
 typedef void (*vis_export_t) (struct buffer *outputbuf, struct outputstate *output, frames_t out_frames, bool silence);
 typedef void (*vis_stop_t) (void);
+typedef void (*vis_close_t) (void);
 extern vis_export_t vis_export;
 extern vis_stop_t vis_stop;
 #else
@@ -780,7 +781,7 @@ void _vis_stop(void);
 void _vis_2_export(struct buffer *outputbuf, struct outputstate *output, frames_t out_frames, bool silence);
 void output_vis_2_init(log_level level, u8_t *mac);
 void _vis_2_stop(void);
-void _vis_2_set_buf_size(unsigned size);
+void _vis_2_close(void);
 #endif
 
 // dop.c

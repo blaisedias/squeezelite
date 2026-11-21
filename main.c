@@ -311,8 +311,12 @@ static void stubbed_vis_export(struct buffer *outputbuf, struct outputstate *out
 static void stubbed_vis_stop(void) {
 }
 
+static void stubbed_vis_close(void) {
+}
+
 vis_export_t vis_export = stubbed_vis_export;
 vis_stop_t vis_stop = stubbed_vis_stop;
+vis_close_t vis_close = stubbed_vis_close;
 #endif
 
 static void sighandler(int signum) {
@@ -642,6 +646,7 @@ int main(int argc, char **argv) {
 			visexport_2 = true;
 			vis_export = _vis_2_export;
 			vis_stop = _vis_2_stop;
+			vis_close = _vis_2_close;
 			break;
 #endif
 #if ALSA
@@ -917,6 +922,9 @@ int main(int argc, char **argv) {
 	decode_close();
 	stream_close();
 
+#if VISEXPORT || VISEXPORT_2
+	vis_close();
+#endif
 	if (!strcmp(output_device, "-")) {
 		output_close_stdout();
 	} else {

@@ -207,11 +207,14 @@ void _vis_2_stop(void) {
 		pthread_rwlock_wrlock(&vis_mmap->rwlock);
 		vis_mmap->running = false;
 		pthread_rwlock_unlock(&vis_mmap->rwlock);
-	 	keep_running = false;
-		sem_post(&samples_sem);
-		if (samples_thread) {
-			pthread_join(samples_thread, NULL);
-		}
+	}
+}
+
+void _vis_2_close(void) {
+	keep_running = false;
+	if (samples_thread) {
+	sem_post(&samples_sem);
+		pthread_join(samples_thread, NULL);
 	}
 	sem_destroy(&samples_sem);
 }
